@@ -1,6 +1,6 @@
 # GoogleProxy.py – PURE GLASSMORPHISM DESIGN + Plugin-System + SearXNG Integration
 # Run:  pip install fastapi uvicorn requests
-# Start: python3 GoogleProxy.py 
+# Start: python3 GoogleProxy.py
 
 from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
