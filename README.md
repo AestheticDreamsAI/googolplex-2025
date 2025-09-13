@@ -36,7 +36,7 @@ In short: instead of a proof-of-concept hack, this project is a **real open fram
 ---
 
 ## 📸 Demo
-*(Add screenshots or GIFs here – e.g. Weather plugin, Web Search results, Siri Shortcut flow)*
+![GoogolPlex Demo](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjRudXA1dzE5Zm1lbXZkZjgyY3N0cW9hdG9oaXloam8zNW40OWwyeCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/RBMMzJSGC8d0reQshA/giphy.gif)
 
 ---
 
