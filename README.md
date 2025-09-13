@@ -1,6 +1,3 @@
-Alles klar 🚀 – hier bekommst du die **vollständige README.md**, GitHub-fertig und mit dem neuen Abschnitt über die Vorteile gegenüber dem Original von 2014.
-
-````markdown
 # GoogolPlex (2025 Edition)
 
 A **local Siri plugin framework for iOS** – inspired by the GoogolPlex hack (2014), but stable, open and patch-proof.  
