@@ -3,6 +3,8 @@
 A **local Siri plugin framework for iOS** – inspired by the GoogolPlex hack (2014), but stable, open and patch-proof.  
 With GoogolPlex you can route Siri queries through Shortcuts & Safari redirects to your own local server and answer them with **custom Python plugins** – including UI and TTS.
 
+---
+
 > ℹ️ **Why start at v3.2 instead of v1.0?**  
 >  
 > GoogolPlex 2025 has gone through several private iterations before this first public release.  
