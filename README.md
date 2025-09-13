@@ -57,7 +57,7 @@ pip install -r requirements.txt
 ### 3. Run the server
 
 ```bash
-python GoogolPlex.py
+python3 GoogolPlex.py
 ```
 
 By default it runs at `http://localhost:5000`.
@@ -151,7 +151,7 @@ This uses `window.TTS.queue(...)` with deduplication so the text is only spoken 
    plugin_searxng.py     # Web Search plugin (SearXNG)
    plugin_wikipedia.py   # Wikipedia lookup
    plugin_setup.py       # iPhone setup wizard
-/GoogleProxy.py          # Main server & query dispatcher (loads all plugins)
+/GoogolPlex.py          # Main server & query dispatcher (loads all plugins)
 ```
 
 ---
