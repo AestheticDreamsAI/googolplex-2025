@@ -1,5 +1,9 @@
 # Web framework
 flask>=2.0,<3.0
+fastapi>=0.100,<1.0
+
+# HTTP server for ASGI apps
+uvicorn[standard]>=0.23,<1.0
 
 # HTTP requests
 requests>=2.31,<3.0
