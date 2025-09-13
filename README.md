@@ -57,7 +57,7 @@ pip install -r requirements.txt
 ### 3. Run the server
 
 ```bash
-python GoogleProxy.py
+python GoogolPlex.py
 ```
 
 By default it runs at `http://localhost:5000`.
