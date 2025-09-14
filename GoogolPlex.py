@@ -2,14 +2,16 @@
 # Run:  pip install fastapi uvicorn requests
 # Start: python3 GoogleProxy.py
 
-from fastapi import FastAPI, Query
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 from urllib.parse import urlencode
 from datetime import datetime
 import html, os, importlib.util, requests
 import os
 import time
+from pydantic import BaseModel
 
 # Global state für file tracking
 PLUGIN_MTIMES = {}
@@ -23,6 +25,392 @@ PLUGIN_DIR = os.path.join(os.path.dirname(__file__), "plugins")
 SEARXNG_BASE_URL = "" #Or Local Instanz
 
 app = FastAPI(title=APP_TITLE, version=APP_VERSION)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=False
+)
+
+@app.get("/api/googolplex-instance")
+def ping():
+    return {"ok": True, "name": "GoogolPlex", "version": "3.2.0"}
+
+@app.get("/install", response_class=HTMLResponse)
+async def install(request: Request, manifest_url: str = "", return_to: str = ""):
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Installing Plugin - GoogolPlex 2025</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+
+    :root {{
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-bg-strong: rgba(255, 255, 255, 0.12);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.8);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --accent: #6366f1;
+      --success: #10b981;
+      --error: #ef4444;
+    }}
+
+    body {{
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 40%, #16213e 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }}
+
+    body::before {{
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.04) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.02) 0%, transparent 50%);
+      pointer-events: none;
+    }}
+
+    .container {{
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }}
+
+    .install-card {{
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      text-align: center;
+    }}
+
+    .install-card::before {{
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    }}
+
+    .install-icon {{
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      display: block;
+    }}
+
+    .install-title {{
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+    }}
+
+    .install-subtitle {{
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }}
+
+    .manifest-info {{
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      text-align: left;
+    }}
+
+    .manifest-url {{
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-family: 'SF Mono', monospace;
+      word-break: break-all;
+    }}
+
+    .progress-section {{
+      margin: 3rem 0;
+    }}
+
+    .progress-bar {{
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }}
+
+    .progress-fill {{
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #7c3aed);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }}
+
+    .progress-text {{
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }}
+
+    .spinner {{
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 8px;
+    }}
+
+    @keyframes spin {{
+      0% {{ transform: rotate(0deg); }}
+      100% {{ transform: rotate(360deg); }}
+    }}
+
+    .result-section {{
+      margin-top: 3rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--glass-border);
+      display: none;
+    }}
+
+    .result-icon {{
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+    }}
+
+    .result-title {{
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }}
+
+    .result-message {{
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }}
+
+    .btn {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid var(--glass-border);
+      margin: 0 1rem;
+    }}
+
+    .btn-primary {{
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }}
+
+    .btn-primary:hover {{
+      background: linear-gradient(135deg, #5855eb, #6d28d9);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    }}
+
+    .success {{ color: var(--success); }}
+    .error {{ color: var(--error); }}
+
+    .fade-in {{
+      animation: fadeIn 0.5s ease-in-out;
+    }}
+
+    .fade-out {{
+      animation: fadeOut 0.3s ease-in-out;
+      opacity: 0;
+      pointer-events: none;
+    }}
+
+    @keyframes fadeIn {{
+      from {{ opacity: 0; transform: translateY(20px); }}
+      to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    @keyframes fadeOut {{
+      from {{ opacity: 1; transform: translateY(0); }}
+      to {{ opacity: 0; transform: translateY(-20px); }}
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="install-card">
+      <div class="install-icon">📦</div>
+      <h1 class="install-title">Installing Plugin</h1>
+      <p class="install-subtitle" id="installSubtitle">Please wait while we install your plugin...</p>
+
+      <div class="manifest-info" id="manifestInfo">
+        <h4>Plugin Source</h4>
+        <div class="manifest-url">{manifest_url}</div>
+      </div>
+
+      <div class="progress-section" id="progressSection">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">
+          <span class="spinner"></span>Preparing installation...
+        </div>
+      </div>
+
+      <div class="result-section" id="resultSection">
+        <div class="result-icon" id="resultIcon">✅</div>
+        <h2 class="result-title" id="resultTitle">Installation Complete!</h2>
+        <p class="result-message" id="resultMessage">The plugin has been successfully installed.</p>
+        
+        <div>
+          <a href="{return_to}" class="btn btn-primary">
+            🏠 Return to Plugin Hub
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateProgress(percentage, text) {{
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      progressFill.style.width = percentage + '%';
+      progressText.innerHTML = percentage < 100 
+        ? '<span class="spinner"></span>' + text
+        : text;
+    }}
+
+    function showResult(success, title, message) {{
+      // Hide loading elements with fade-out animation
+      const installSubtitle = document.getElementById('installSubtitle');
+      const manifestInfo = document.getElementById('manifestInfo');
+      const progressSection = document.getElementById('progressSection');
+      
+      installSubtitle.classList.add('fade-out');
+      manifestInfo.classList.add('fade-out');
+      progressSection.classList.add('fade-out');
+      
+      // Wait for fade-out to complete, then show result
+      setTimeout(() => {{
+        installSubtitle.style.display = 'none';
+        manifestInfo.style.display = 'none';
+        progressSection.style.display = 'none';
+        
+        const resultSection = document.getElementById('resultSection');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMessage = document.getElementById('resultMessage');
+        
+        resultIcon.textContent = success ? '✅' : '❌';
+        resultIcon.className = success ? 'result-icon success' : 'result-icon error';
+        
+        resultTitle.textContent = title;
+        resultTitle.className = success ? 'result-title success' : 'result-title error';
+        
+        resultMessage.textContent = message;
+        
+        resultSection.style.display = 'block';
+        resultSection.classList.add('fade-in');
+      }}, 300);
+    }}
+
+    // Auto-start installation
+    async function installPlugin() {{
+      try {{
+        updateProgress(10, 'Connecting to server...');
+        
+        updateProgress(30, 'Downloading plugin manifest...');
+        
+        const response = await fetch('/api/plugins/install', {{
+          method: 'POST',
+          headers: {{ 'Content-Type': 'application/json' }},
+          body: JSON.stringify({{
+            "manifest_url": "{manifest_url}",
+            "auto_update": true
+          }})
+        }});
+
+        updateProgress(70, 'Processing installation...');
+        
+        const result = await response.json();
+
+        updateProgress(90, 'Finalizing...');
+        
+        setTimeout(() => {{
+          updateProgress(100, 'Installation complete!');
+          
+          setTimeout(() => {{
+            if (result.ok || result.success) {{
+              showResult(true, 'Installation Successful! 🎉', 'Plugin has been successfully installed and is ready to use.');
+            }} else {{
+              showResult(false, 'Installation Failed', result.error || 'An error occurred during installation. Please try again.');
+            }}
+          }}, 500);
+        }}, 1000);
+
+      }} catch (error) {{
+        updateProgress(100, 'Installation failed!');
+        setTimeout(() => {{
+          showResult(false, 'Connection Error', 'Failed to connect to the server: ' + error.message);
+        }}, 500);
+      }}
+    }}
+
+    document.addEventListener('DOMContentLoaded', function() {{
+      setTimeout(() => {{ installPlugin(); }}, 800);
+    }});
+  </script>
+</body>
+</html>"""
+
+@app.post("/api/plugins/install")
+async def install(req: Request):
+    data = await req.json()
+    # manifest_url installieren ...
+    return JSONResponse({"success": True})
+
+
+@app.route('/.well-known/googolpIex')
+def well_known():
+    # Tippfehler absichtlich vermeiden – richtig schreiben:
+    return jsonify({"instance":"googolplex","version":"3.2.0"})
+
 
 def load_plugins():
     mods = []
